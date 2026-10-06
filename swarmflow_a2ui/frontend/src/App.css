@@ -1,0 +1,147 @@
+.app-shell {
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 28px 20px 48px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.app-header h1 {
+  margin: 0;
+  font-size: 28px;
+}
+
+.app-header p,
+.empty-hint,
+.node-detail {
+  margin: 6px 0 0;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.ask-form {
+  display: flex;
+  gap: 12px;
+  align-items: flex-end;
+}
+
+.ask-form textarea {
+  flex: 1;
+  resize: vertical;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 12px 14px;
+  font: inherit;
+  background: var(--panel);
+  color: var(--ink);
+}
+
+.ask-form button,
+.a2ui-panel button {
+  border: 0;
+  border-radius: 12px;
+  background: var(--brand);
+  color: white;
+  padding: 12px 18px;
+  font: inherit;
+  cursor: pointer;
+}
+
+.ask-form button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.progress-tree,
+.progress-tree ul {
+  list-style: none;
+  margin: 0;
+  padding-left: 18px;
+}
+
+.progress-tree {
+  padding-left: 0;
+}
+
+.progress-node {
+  margin: 8px 0;
+  padding: 10px 12px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+
+.progress-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--muted);
+}
+
+.status-dot.status-running {
+  background: var(--run);
+}
+
+.status-dot.status-completed {
+  background: var(--ok);
+}
+
+.status-dot.status-waiting_for_human {
+  background: var(--wait);
+}
+
+.status-dot.status-failed {
+  background: var(--fail);
+}
+
+.node-type,
+.node-status,
+.node-tokens {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.node-label {
+  font-weight: 600;
+}
+
+.node-detail {
+  white-space: pre-wrap;
+}
+
+.a2ui-panel {
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid var(--line);
+}
+
+.error-text {
+  margin: 0;
+  color: var(--fail);
+}
+
+.result-panel {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 14px 16px;
+}
+
+.result-panel h2 {
+  margin: 0 0 8px;
+  font-size: 16px;
+}
+
+.result-panel pre {
+  margin: 0;
+  white-space: pre-wrap;
+  font-family: inherit;
+}

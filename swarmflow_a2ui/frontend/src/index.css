@@ -1,0 +1,42 @@
+:root {
+  --bg: #f4f1ea;
+  --panel: #fffdf8;
+  --ink: #1d1a16;
+  --muted: #6d655c;
+  --line: #e4dcd0;
+  --brand: #8a4b08;
+  --ok: #2f6b4f;
+  --wait: #9a6700;
+  --fail: #a33b32;
+  --run: #8a4b08;
+  --a2ui-color-primary: #8a4b08;
+  --a2ui-color-on-primary: #ffffff;
+  --a2ui-color-primary-hover: #6f3c06;
+  --a2ui-color-background: #fffdf8;
+  --a2ui-color-on-background: #1d1a16;
+  --a2ui-color-surface: #fffdf8;
+  --a2ui-color-on-surface: #1d1a16;
+  --a2ui-color-border: #e4dcd0;
+  --a2ui-color-input: #ffffff;
+  --a2ui-color-on-input: #1d1a16;
+  --a2ui-border-radius: 12px;
+  --a2ui-spacing-m: 8px;
+  --a2ui-font-family: "Segoe UI", "PingFang SC", "Noto Sans SC", sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  min-height: 100%;
+}
+
+body {
+  font-family: var(--a2ui-font-family);
+  background: var(--bg);
+  color: var(--ink);
+}

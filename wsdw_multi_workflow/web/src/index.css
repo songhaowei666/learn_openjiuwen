@@ -1,0 +1,40 @@
+:root {
+  --bg: #eef3f3;
+  --panel: #ffffff;
+  --ink: #132524;
+  --muted: #5b6f6e;
+  --line: #d5e0df;
+  --brand: #0f6e6b;
+  --brand-hover: #0c5b59;
+  --danger: #b42318;
+  --a2ui-color-primary: #0f6e6b;
+  --a2ui-color-on-primary: #ffffff;
+  --a2ui-color-primary-hover: #0c5b59;
+  --a2ui-color-background: #ffffff;
+  --a2ui-color-on-background: #132524;
+  --a2ui-color-surface: #ffffff;
+  --a2ui-color-on-surface: #132524;
+  --a2ui-color-border: #d5e0df;
+  --a2ui-color-input: #ffffff;
+  --a2ui-color-on-input: #132524;
+  --a2ui-border-radius: 12px;
+  --a2ui-spacing-m: 8px;
+  --a2ui-font-family: "Segoe UI", "PingFang SC", "Noto Sans SC", sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  height: 100%;
+}
+
+body {
+  font-family: var(--a2ui-font-family);
+  background: var(--bg);
+  color: var(--ink);
+}

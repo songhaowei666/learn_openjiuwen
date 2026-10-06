@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "wsdw-multi-workflow"
+version = "0.1.0"
+description = "基于 openjiuwen ControllerAgent 的多工作流金融智能体示例"
+readme = "README.md"
+requires-python = ">=3.11,<3.14"
+dependencies = [
+    # 在 agent-core 仓库内开发时，建议可编辑安装父项目：
+    #   uv pip install -e ../../..
+    # 独立使用时安装已发布的 openjiuwen 包。
+    "openjiuwen",
+    "fastapi",
+    "uvicorn",
+]
+
+[project.scripts]
+wsdw-multi-workflow = "api.__main__:run"
+wsdw-multi-workflow-web = "api.server:run"
+
+[tool.setuptools]
+packages = ["api", "api.handlers", "api.executors", "api.workflows"]
