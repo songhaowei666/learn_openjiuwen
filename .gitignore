@@ -1,0 +1,4 @@
+logs/logs/interface/jiuwen_interface.log
+logs/logs/interface/jiuwen_prompt_builder_interface.log
+logs/logs/performance/jiuwen_performance.log
+logs/logs/run/jiuwen.log

@@ -286,8 +286,8 @@ schema 负责校验「回复长什么样」，标记负责决定「画哪一种�
 
 **参考**
 
-- 本文示例：`learn_note/example/swarmflow_a2ui`
 - SwarmFlow 引擎进度事件：`openjiuwen/agent_teams/workflow/engine/progress.py`
-- A2UI 协议：https://a2ui.org/
+- A2UI 协议：[https://a2ui.org/](https://a2ui.org/)
+- 本文项目代码：[https://github.com/songhaowei666/learn_openjiuwen/tree/main/swarmflow_a2ui](https://github.com/songhaowei666/learn_openjiuwen/tree/main/swarmflow_a2ui)
 
-*示例位于 openJiuwen agent-core，遵循 Apache-2.0 协议。*
+*示例基于 openJiuwen agent-core，遵循 Apache-2.0 协议。*
