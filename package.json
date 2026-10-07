@@ -3,10 +3,12 @@
   "private": true,
   "workspaces": [
     "wsdw_multi_workflow/web",
-    "swarmflow_a2ui/frontend"
+    "swarmflow_a2ui/frontend",
+    "swarmchat_room/frontend"
   ],
   "scripts": {
     "dev:wsdw": "npm run dev -w wsdw-multi-workflow-web",
-    "dev:swarmflow": "npm run dev -w swarmflow-a2ui-demo"
+    "dev:swarmflow": "npm run dev -w swarmflow-a2ui-demo",
+    "dev:swarmchat": "npm run dev -w swarmchat-room"
   }
 }

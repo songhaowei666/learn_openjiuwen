@@ -1,6 +1,7 @@
 .venv/
 node_modules/
 .env
+swarmchat_room/workspace/
 
 logs/logs/interface/jiuwen_interface.log
 logs/logs/interface/jiuwen_prompt_builder_interface.log
