@@ -4,6 +4,22 @@
 >
 > 本文记录我在 openJiuwen agent-core 里做的一个小 Demo：`swarmchat_room`。页面是一间公开聊天室：人说的话全部进历史；只有勾选的专家会被叫醒，根据群聊摘录用真实模型当众回复。重点不是「预算 10 万两周上线」这个玩具场景，而是三件事：**公开消息怎么归档**，**点名如何决定谁开口**，以及**后开口的专家如何看见先开口专家的公开回复**。
 
+## 目录
+
+1. [一、先说问题：多人专家协作难在哪](#一先说问题多人专家协作难在哪)
+2. [二、整体架构](#二整体架构)
+3. [三、SwarmChat 在建模什么](#三swarmchat-在建模什么)
+4. [四、建房：一间进程内的房间](#四建房一间进程内的房间)
+5. [五、账本、真相源与消息表结构](#五账本真相源与消息表结构)
+   - [消息表长什么样](#消息表长什么样)
+6. [六、归档与唤醒：同一条入口，两道闸门](#六归档与唤醒同一条入口两道闸门)
+7. [七、摘录、模型、公开发言](#七摘录模型公开发言)
+8. [八、前端只要把三件事画清楚](#八前端只要把三件事画清楚)
+9. [九、这个 Demo 故意没做什么](#九这个-demo-故意没做什么)
+10. [十、分布式时怎么处理 history.jsonl](#十分布式时怎么处理-historyjsonl)
+11. [十一、怎么跑](#十一怎么跑)
+12. [十二、总结](#十二总结)
+
 ---
 
 ## 一、先说问题：多人专家协作难在哪
@@ -39,7 +55,7 @@ FastAPI
          └─ GroupSendMessageTool               专家公开回复（mentions=[]）
                 │
                 ▼
-         内存库广播行 + workspace/.../history.jsonl
+         workspace/room.db 广播行 + workspace/.../history.jsonl
 ```
 
 项目结构：
@@ -86,20 +102,19 @@ swarmchat_room/
 
 ## 四、建房：一间进程内的房间
 
-进程启动时只建一次房。数据库用内存 SQLite，事件总线用 `InProcessMessager()`，没有订阅消费者；广播发布失败只记日志，不回滚已写入的消息。
+进程启动时只建一次房。数据库用持久化 SQLite 文件，事件总线用 `InProcessMessager()`，没有订阅消费者；广播发布失败只记日志，不回滚已写入的消息。
 
-名册很短：主持人 `leader`，研究 `research`，法务 `legal`。页面勾选框只暴露后两位。`TeamBackend` 默认身份是主持人：
-
-```python
-self.backend = TeamBackend("room", "leader", True, self.db, self.messager)
-```
-
-群聊历史不写到 `~/.openjiuwen`，而是落到 demo 自己的目录。做法是给 `TeamAgentSpec` 配本地 workspace，并在绑会话前清掉旧登记，避免仍指向上一次的默认路径：
+名册很短：主持人 `leader`，研究 `research`，法务 `legal`。页面勾选框只暴露后两位。`TeamBackend` 默认身份是主持人。账本和历史都落在 demo 目录：
 
 ```python
 WORKSPACE_DIR = Path(__file__).resolve().parents[1] / "workspace"
-WORKSPACE_DIR.mkdir(parents=True, exist_ok=True)
-await asyncio.to_thread(GroupConversationLog.delete_registered, "room", "discussion-1")
+DB_PATH = WORKSPACE_DIR / "room.db"
+
+self.db = TeamDatabase(DatabaseConfig(
+    db_type="sqlite",
+    connection_string=str(DB_PATH),
+))
+self.backend = TeamBackend("room", "leader", True, self.db, self.messager)
 
 self.backend.group_chat_spec = TeamAgentSpec(
     agents={"leader": DeepAgentSpec()},
@@ -114,11 +129,107 @@ self.backend.group_chat_spec = TeamAgentSpec(
 self.backend.bind_group_session("discussion-1")
 ```
 
-页底显示的 `context_path`，就是这份 `history.jsonl` 的绝对路径。
+重启后端时，`create_team` / `create_member` 遇到已有行会跳过，广播表和 `history.jsonl` 都还在，可以接着聊。页底显示的 `context_path`，就是这份 `history.jsonl` 的绝对路径。
 
 ---
 
-## 五、归档与唤醒：同一条入口，两道闸门
+## 五、账本、真相源与消息表结构
+
+读 SwarmChat 时最容易混的是：数据库和 `history.jsonl` 到底谁说了算。可以记成一句话：
+
+**先信数据库，再投影成文件；页面看文件，规则看数据库。**
+
+| | `workspace/room.db`（账本） | `history.jsonl`（公告栏） |
+| --- | --- | --- |
+| 角色 | 内部真相源 | 对外投影 |
+| 负责什么 | 名册校验、落库、duplicate、算摘录窗口 | 给人看、给摘录文案附路径 |
+| 页面气泡从哪来 | 不直接读 | `GET /api/history` 读这个文件 |
+| 进程重启后 | 文件还在，可续聊 | 文件还在；也可按账本重投影 |
+
+本 Demo 里数据库是文件 SQLite：`swarmchat_room/workspace/room.db`。它至少干四件事：
+
+1. **名册**。启动时写入团队 `room`，以及主持人、研究、法务。点名未知成员时，`post_message` 查成员表，查不到就整次失败、不落库。
+2. **公开消息真相源**。用户和专家的发言先写成广播行，带上 `client_message_id`、`mentions` 等 meta。重复发送靠这里判 `duplicate`。
+3. **摘录范围**。`context_for` 从库里读广播消息和时间戳，再按该成员的 `read_at`（本 Demo 不推进，基本是 0）截出最近几条。源码注释也写了：范围由 DB 定，不是直接读历史文件。
+4. **投影原料**。写完库之后调用 `sync_history`，把广播行同步成 `workspace/.../history.jsonl`。
+
+用会议室类比：名册是门禁；广播表是会议记录本；`read_at` 是每人看到哪一页；`history.jsonl` 是贴在门口给人扫一眼的公告。公告坏了可以按账本重印，规则仍以账本为准。
+
+这套分工在单体里很顺；一旦多机、多成员进程，**不能把 `history.jsonl` 当成跨机真相源**。分布式怎么演进见[第十节](#十分布式时怎么处理-historyjsonl)。
+
+### 消息表长什么样
+
+`db.message` 不是一张全局固定叫 `message` 的表，而是**按会话动态建表**。会话绑在 `discussion-1` 时，表名是：
+
+```text
+team_message_<blake2s(session_id) 的 16 位 hex>
+```
+
+字段来自 `TeamMessageBase`：
+
+| 列 | 类型 | 说明 |
+| --- | --- | --- |
+| `message_id` | `str` PK | 消息主键。群聊里由 `team + session + client_message_id` 算 uuid5 |
+| `team_name` | `str` | 团队名，外键到 `team_info`，本 Demo 为 `room` |
+| `from_member_name` | `str` | 发送者。用户是 `user`，专家是 `research` / `legal` |
+| `to_member_name` | `str?` | 私信收件人。群聊广播为 `NULL` |
+| `content` | `str` | 正文。群聊用 `inline_content=True`，直接存文本 |
+| `timestamp` | `bigint` | 毫秒时间戳，摘录窗口靠它裁剪 |
+| `broadcast` | `bool` | 是否广播。群聊为 `true` |
+| `protocol` | `str` | 默认 `plain` |
+| `is_read` | `bool?` | 仅私信用。广播固定 `NULL` |
+| `meta` | `str?` | JSON 字符串，群聊元数据放这里 |
+
+每张会话消息表还有两组复合索引：`(to_member_name, is_read, timestamp)` 和 `(broadcast, timestamp)`。
+
+群聊写入时，`meta` 大致是：
+
+```json
+{
+  "type": "group_chat",
+  "client_message_id": "script-2",
+  "sender_name": "user",
+  "mentions": ["research"],
+  "attachments": []
+}
+```
+
+`client_message_id` 是这次发送的身份证。`post_message` 用 `team + session + client_message_id` 算出 `message_id`；主键已存在且正文、mentions 相同，就返回 `duplicate=true`，Demo 不再叫模型。
+
+广播已读水位不在消息表里，而在同会话的：
+
+```text
+message_read_status_<同样的 hex>
+```
+
+列是 `(member_name, team_name)` 主键 + `read_at`。本 Demo 不推进它，所以 `context_for` 里读到的基本是 `0`，摘录窗口是 `(0, 触发时间]`。
+
+串起来看一次「勾选研究并发送」：
+
+```text
+前端 mentions=["research"], client_message_id="xxx"
+        │
+        ▼
+append_group_message("user", ...)
+        ├─ 查名册 research
+        ├─ 写 team_message_* 广播行 + meta
+        └─ sync_history → history.jsonl
+        │
+        ▼
+context_for(research, trigger)   # 按 read_at 从库截最近几条
+        │
+        ▼
+模型生成回复 → GroupSendMessageTool
+        ├─ 再写一条广播（from=research）
+        └─ 再 sync_history
+        │
+        ▼
+前端 GET /api/history 读文件，画出气泡
+```
+
+---
+
+## 六、归档与唤醒：同一条入口，两道闸门
 
 用户发送走 `POST /api/messages`。整段处理包在 `set_session_id("discussion-1")` 里。`post_message` 内部还会再 set/reset 一次，外层令牌负责在退出后把会话恢复回来，这样后面的 `get_message` 和 `context_for` 仍打在同一张动态表上。
 
@@ -143,7 +254,7 @@ result = await self.backend.append_group_message(
 
 ---
 
-## 六、摘录、模型、公开发言
+## 七、摘录、模型、公开发言
 
 被点名的专家不会拿到整份 `history.jsonl` 文本，而是拿到 `context_for` 渲染好的一段中文通知：时间范围、触发消息 id、历史文件路径，以及最近几条 JSON 摘录。Demo 把这段摘录直接喂给模型：
 
@@ -174,7 +285,7 @@ finally:
 
 ---
 
-## 七、前端只要把三件事画清楚
+## 八、前端只要把三件事画清楚
 
 前端是精简 React，端口 `5175`，`/api` 代理到 `8002`。进入页面先拉名册和历史。
 
@@ -184,11 +295,15 @@ finally:
 2. **点名唤醒**：勾选谁，谁出现模型回复；用户消息旁边贴上本次 `excerpts`；
 3. **后到的人看得见**：法务那次摘录里含有研究的公开回复；研究没有第二条气泡。
 
+实际跑起来大致是这样：先把预算和工期归档，再勾选法务点名唤醒，法务当众给出合同与验收风险建议。底部是输入框、专家勾选，以及「发送 / 播放脚本」。
+
+![功能界面：公开气泡、专家勾选与发送区](../images/功能界面.png)
+
 「播放脚本」和手工输入走同一个接口。脚本用固定的 `client_message_id`，用来演示未知成员失败和重复发送。摘录面板挂在当次响应上，刷新后历史气泡还在，摘录旁注会消失——它是调试视图，不是第二份持久存储。真正的持久投影是页底那条 `history.jsonl`。
 
 ---
 
-## 八、这个 Demo 故意没做什么
+## 九、这个 Demo 故意没做什么
 
 它能把 SwarmChat 的主路径跑通，但有几处边界写在这里，避免把示例当成完整团队运行时。
 
@@ -204,13 +319,49 @@ finally:
 
 Demo 在工具调用时把 `mentions` 留空。如果把别的专家写进回复的 mentions，公开房间会重新进入唤醒逻辑。
 
-**4. 模型状态与内存库同进程**
+**4. 仍是单进程房间**
 
-房间数据库在内存里，进程重启后广播表清空；`history.jsonl` 仍留在 `swarmchat_room/workspace/`。页面会重新读到文件里的旧气泡，但内存库与文件不是同一份真相源，演示时重启后端等于重新开一局内存账本。
+账本已落到 `workspace/room.db`，重启可续聊。但事件总线仍是 `InProcessMessager()`，没有多成员进程、也没有跨机共享。清空演示数据时，删掉 `swarmchat_room/workspace/` 即可。若要把「文件投影」拆到多机，见下一节。
 
 ---
 
-## 九、怎么跑
+## 十、分布式时怎么处理 history.jsonl
+
+`history.jsonl` 在 SwarmChat 里本来就不是分布式共识层，而是**本地可读投影**：写完广播行之后 `sync_history` 在成员 workspace 上原子重写一份，方便 Agent `read_file`、也方便本 Demo 的 `GET /api/history`。文件丢了可以从 DB 重建——官方群聊规格里也是这个分工。
+
+单体感主要来自：写投影的进程和读文件的 Agent **共享同一份本地盘**。多机时原则不变：
+
+**跨机只共享账本（数据库）和唤醒总线；不拿某台机器上的 jsonl 路径当主键。**
+
+| 层级 | 本 Demo（单体） | 分布式建议 |
+| --- | --- | --- |
+| 真相源 | 文件 SQLite `room.db` | PostgreSQL / MySQL 等共享库 |
+| 唤醒 | `InProcessMessager()` | Redis / NATS / Kafka 等；消费者按 `mentions` 拉起 |
+| 摘录 | `context_for` 读本机库 | 仍读共享库，窗口语义不用改 |
+| `history.jsonl` | 本机 workspace 投影 | 降级为可选本地缓存，或换成查询 API / 对象存储 |
+
+常见三条演进路径：
+
+1. **投影仍本地（最贴现有设计）**  
+   每个成员进程在自己的 workspace 里维护一份 jsonl；收到广播或写完库后再从共享 DB `sync_history`。Agent 继续 `read_file` 本地路径，但**绝不**把绝对路径当成跨机主键。
+
+2. **去掉文件依赖（服务化）**  
+   前端/网关直接分页查广播表（或继续走 `GET /api/history`，只是后端改读库）。模型需要全文时用查库工具，而不是读 `/home/.../history.jsonl`。本 Demo 的页面其实已经偏这种：气泡来自 HTTP，不是浏览器直接打开文件。
+
+3. **共享对象存储**  
+   投影写到 S3 / OSS（按 team + session 一份），提示词里给 object key。适合「多机都要读同一份全文」；权威记录仍是 DB。
+
+落地时再盯三件事：
+
+- **谁写投影**：现有实现是锁内全量重写。多 API 副本同时往同一块共享盘 `sync_history` 容易打架——更稳的是「每节点本地投影」或「单独一个投影服务」。
+- **路径不能出网**：摘录模板里的 `context_path` 只对本机有意义；分布式提示应给 session id +「用工具拉历史」。
+- **读延迟以库为准**：投影异步刷盘时，`context_for` 仍从 DB 截窗口；不要用「jsonl 是否刷完」当唤醒条件。
+
+一句话：**分布式把账本和总线做共享；`history.jsonl` 继续当本机或对象存储上的只读投影，能重建、不当主库。**
+
+---
+
+## 十一、怎么跑
 
 依赖装在示例根目录 `learn_note/example`：共用 `.venv`、`node_modules` 和 `.env`。
 
@@ -237,14 +388,16 @@ npm run dev:swarmchat
 
 ---
 
-## 十、总结
+## 十二、总结
 
-这条链路可以收成四句话：
+这条链路可以收成六句话：
 
-- **公开房间管历史**：每句话进广播表，并投影到 `history.jsonl`；
+- **数据库是账本**：名册、落库、duplicate、摘录窗口都以它为准；
+- **文件是公告栏**：`history.jsonl` 给页面看，也给摘录附路径；分布式里它仍是投影，不当跨机真相源；
 - **mentions 管唤醒**：不勾选只归档，勾选谁谁开口；
-- **摘录管上下文**：专家先看最近几条和文件路径，再决定怎么当众说；
-- **绑定身份管发言**：工具作者是当时的成员名，专家回复不再点名他人。
+- **摘录管上下文**：专家先看最近几条，再决定怎么当众说；
+- **绑定身份管发言**：工具作者是当时的成员名，专家回复不再点名他人；
+- **多机先共享库和总线**：本地或对象存储上的 jsonl 能重建即可。
 
 多人专家协作里，难的不是「再加一个模型」，而是把「全员可见」和「按需开口」拆开。SwarmChat 把这两件事做成同一间房里的两道闸门之后，后面的专家可以站在前面的公开结论上继续说话，又不会把整个房间重新吵起来。
 
@@ -255,6 +408,7 @@ npm run dev:swarmchat
 - 群聊归档与摘录：`openjiuwen/agent_teams/group_chat/handler.py`
 - 专家公开发言工具：`openjiuwen/agent_teams/group_chat/tools.py`
 - 历史文件投影：`openjiuwen/agent_teams/group_chat/conversation.py`
+- 消息表模型：`openjiuwen/agent_teams/tools/models.py`（`TeamMessageBase`）
 - 本文项目代码：[https://github.com/songhaowei666/learn_openjiuwen/tree/main/swarmchat_room](https://github.com/songhaowei666/learn_openjiuwen/tree/main/swarmchat_room)
 
 *示例基于 openJiuwen agent-core，遵循 Apache-2.0 协议。*

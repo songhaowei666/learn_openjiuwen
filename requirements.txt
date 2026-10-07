@@ -1,7 +1,8 @@
 # 示例根目录共用 Python 依赖。在本目录执行：
 #   uv venv --python 3.11 .venv
 #   uv pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple --trusted-host pypi.tuna.tsinghua.edu.cn
--e ../..
+# openjiuwen 从本地 agent-core 源码普通安装（非 editable）。
+../..
 fastapi
 uvicorn
 sse-starlette

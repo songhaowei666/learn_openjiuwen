@@ -63,7 +63,7 @@ learn_note/example/swarmchat_room/
   frontend/src/styles.css
 ```
 
-进程内只有一份房间。数据库用 `TeamDatabase(DatabaseConfig(connection_string=":memory:"))`。事件总线用 `InProcessMessager()`，不订阅消费者；`publish_broadcast` 失败只记日志，不回滚已写入的广播。`TeamBackend("room", "leader", True, db, messager)` 自带 `message_manager`。
+进程内只有一份房间。数据库用文件 SQLite：`TeamDatabase(DatabaseConfig(db_type="sqlite", connection_string=str(WORKSPACE_DIR / "room.db")))`，路径在 `swarmchat_room/workspace/room.db`，重启可续聊；`open()` 对已存在的 team/member 跳过创建。事件总线用 `InProcessMessager()`，不订阅消费者；`publish_broadcast` 失败只记日志，不回滚已写入的广播。`TeamBackend("room", "leader", True, db, messager)` 自带 `message_manager`。
 
 `group_chat_spec` 设为：
 

@@ -3,13 +3,11 @@
 
 from __future__ import annotations
 
-import asyncio
 import json
 import sys
 from pathlib import Path
 
 from openjiuwen.agent_teams.context import reset_session_id, set_session_id
-from openjiuwen.agent_teams.group_chat.conversation import GroupConversationLog
 from openjiuwen.agent_teams.group_chat.handler import context_for
 from openjiuwen.agent_teams.group_chat.tools import GroupSendMessageTool
 from openjiuwen.agent_teams.messager.inprocess import InProcessMessager
@@ -30,8 +28,9 @@ from common.model import get_shared_model
 
 SESSION_ID = "discussion-1"
 TEAM_NAME = "room"
-# 群聊历史投影到 demo 目录，不写到 ~/.openjiuwen。
+# 账本与历史投影都落在 demo 目录，不写到 ~/.openjiuwen。
 WORKSPACE_DIR = _DEMO_ROOT / "workspace"
+DB_PATH = WORKSPACE_DIR / "room.db"
 
 ROSTER = (
     ("research", "研究"),
@@ -52,26 +51,33 @@ EXPERT_PROMPTS = {
 
 
 class Room:
-    """进程内唯一房间。数据库在内存里，历史投影写到 workspace 的 history.jsonl。"""
+    """进程内唯一房间。账本是持久化 SQLite，历史投影写到 workspace 的 history.jsonl。"""
 
     def __init__(self) -> None:
-        self.db = TeamDatabase(DatabaseConfig(connection_string=":memory:"))
+        WORKSPACE_DIR.mkdir(parents=True, exist_ok=True)
+        self.db = TeamDatabase(DatabaseConfig(
+            db_type="sqlite",
+            connection_string=str(DB_PATH),
+        ))
         self.messager = InProcessMessager()
         self.backend = TeamBackend(TEAM_NAME, "leader", True, self.db, self.messager)
         self.shared_model = get_shared_model()
 
     async def open(self) -> None:
-        """建团队、名册，并绑定演示会话。"""
+        """建团队、名册，并绑定演示会话。已存在的行会跳过，便于重启续聊。"""
         await self.db.initialize()
-        await self.db.team.create_team(TEAM_NAME, "专家协作空间", "leader")
-        await self.db.member.create_member("leader", TEAM_NAME, "主持人", "{}", "ready", role="leader")
+        if not await self.db.team.team_exists(TEAM_NAME):
+            await self.db.team.create_team(TEAM_NAME, "专家协作空间", "leader")
+        if not await self.db.member.member_exists("leader", TEAM_NAME):
+            await self.db.member.create_member(
+                "leader", TEAM_NAME, "主持人", "{}", "ready", role="leader",
+            )
         for member_name, display_name in ROSTER:
+            if await self.db.member.member_exists(member_name, TEAM_NAME):
+                continue
             await self.db.member.create_member(
                 member_name, TEAM_NAME, display_name, "{}", "ready", role="teammate",
             )
-        WORKSPACE_DIR.mkdir(parents=True, exist_ok=True)
-        # 清掉旧会话登记，避免仍指向 ~/.openjiuwen 下的历史目录。
-        await asyncio.to_thread(GroupConversationLog.delete_registered, TEAM_NAME, SESSION_ID)
         # 不设 language，摘录文案走 context_for 的中文默认。
         self.backend.group_chat_spec = TeamAgentSpec(
             agents={"leader": DeepAgentSpec()},
