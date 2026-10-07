@@ -2,6 +2,16 @@
 """运行配置，优先从环境变量读取。"""
 
 import os
+from pathlib import Path
+
+from dotenv import load_dotenv
+
+# config.py 在 wsdw_multi_workflow/api/，示例根目录是 learn_note/example。
+_EXAMPLE_ROOT = Path(__file__).resolve().parents[2]
+_LOCAL_ROOT = Path(__file__).resolve().parents[1]
+# 已导出的环境变量优先；其次本示例 .env；最后根目录共用 .env。
+load_dotenv(_LOCAL_ROOT / ".env")
+load_dotenv(_EXAMPLE_ROOT / ".env")
 
 
 def _env(key: str, default: str) -> str:

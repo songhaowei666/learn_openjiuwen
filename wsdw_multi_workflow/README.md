@@ -19,40 +19,31 @@ wsdw_multi_workflow/
 
 ## 运行
 
-在 `agent-core` 根目录先安装本仓库（提供 openjiuwen）：
+依赖装在示例根目录 `learn_note/example`：共用 `.venv`、根目录 `node_modules`，模型配置写在根目录 `.env`（参考 `.env.example`）。
 
 ```bash
-uv sync
-```
-
-进入本项目并配置环境变量（参考 `.env.example`）：
-
-```bash
-cd learn_note/example/wsdw_multi_workflow
-export WSDW_API_KEY=...
-export WSDW_MODEL_NAME=...
-export WSDW_MODEL_ID=...
-export PYTHONPATH=/path/to/agent-core:$PWD
+cd learn_note/example
+source .venv/bin/activate
+cd wsdw_multi_workflow
 ```
 
 CLI：
 
 ```bash
-python3 -m api
+python -m api
 ```
 
 Web：先启动后端，再启动前端。
 
 ```bash
-python3 -m api.server
+python -m api.server
 ```
 
 另开终端：
 
 ```bash
-cd web
-npm install
-npm run dev
+cd learn_note/example
+npm run dev:wsdw
 ```
 
 浏览器打开 `http://127.0.0.1:5173`。后端默认监听 `http://127.0.0.1:8765`。

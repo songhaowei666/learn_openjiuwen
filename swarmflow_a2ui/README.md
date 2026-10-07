@@ -6,18 +6,22 @@ Agent 节点由同进程的确定性后端回答，不需要模型 API Key。hum
 
 ## 运行
 
-在仓库根目录启动后端（端口 8000）：
+依赖装在示例根目录 `learn_note/example` 的共用 `.venv` 和 `node_modules`。本示例不调用模型，可以不填 `.env`。
+
+在本目录启动后端（端口 8000）：
 
 ```bash
-uv run uvicorn --app-dir learn_note/example/swarmflow_a2ui backend.main:app --host 127.0.0.1 --port 8000
+cd learn_note/example
+source .venv/bin/activate
+cd swarmflow_a2ui
+python -m uvicorn backend.main:app --host 127.0.0.1 --port 8000
 ```
 
 另开终端启动前端：
 
 ```bash
-cd learn_note/example/swarmflow_a2ui/frontend
-npm install
-npm run dev
+cd learn_note/example
+npm run dev:swarmflow
 ```
 
 浏览器打开 http://127.0.0.1:5173 。输入问题后，在进度树里的人工节点完成「通过 / 驳回」、选择报告风格、补充关注点。

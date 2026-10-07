@@ -1,0 +1,12 @@
+{
+  "name": "learn-openjiuwen",
+  "private": true,
+  "workspaces": [
+    "wsdw_multi_workflow/web",
+    "swarmflow_a2ui/frontend"
+  ],
+  "scripts": {
+    "dev:wsdw": "npm run dev -w wsdw-multi-workflow-web",
+    "dev:swarmflow": "npm run dev -w swarmflow-a2ui-demo"
+  }
+}

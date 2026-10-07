@@ -1,0 +1,8 @@
+# 示例根目录共用 Python 依赖。在本目录执行：
+#   uv venv --python 3.11 .venv
+#   uv pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple --trusted-host pypi.tuna.tsinghua.edu.cn
+-e ../..
+fastapi
+uvicorn
+sse-starlette
+python-dotenv
