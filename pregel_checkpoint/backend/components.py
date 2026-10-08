@@ -49,17 +49,21 @@ class TagNode(WorkflowComponent):
 
 
 class MergeNode(WorkflowComponent):
-    """汇合节点：合并左右分支输出（需 wait_for_all）。"""
+    """汇合节点：合并左右分支输出（需 wait_for_all）。
+
+    互斥分支场景下未走的一侧可能是 None，只拼接有值的一侧。
+    """
 
     async def invoke(self, inputs: Input, session: Session, context: ModelContext) -> Output:
-        left_text = inputs.get("left_text", "")
-        right_text = inputs.get("right_text", "")
+        left_text = inputs.get("left_text")
+        right_text = inputs.get("right_text")
+        parts = [p for p in (left_text, right_text) if p not in (None, "")]
         out = {
             "left_text": left_text,
             "right_text": right_text,
-            "merged": f"{left_text} | {right_text}",
+            "merged": " | ".join(parts),
         }
-        _log("merge", f"左右分支已到齐 -> {out['merged']}")
+        _log("merge", f"屏障满足，汇合输出 -> {out['merged']!r}")
         return out
 
 

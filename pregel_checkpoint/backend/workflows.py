@@ -1,9 +1,9 @@
 # -*- coding: UTF-8 -*-
-"""三张学习用静态工作流图。"""
+"""学习用静态工作流图。"""
 
 from __future__ import annotations
 
-from openjiuwen.core.workflow import Workflow, WorkflowCard
+from openjiuwen.core.workflow import BranchRouter, Workflow, WorkflowCard
 
 from .components import (
     AskHumanNode,
@@ -118,4 +118,102 @@ def build_side_effect_workflow(*, idempotent: bool, session_id: str) -> Workflow
     )
     flow.add_connection("start", "charge")
     flow.add_connection("charge", "end")
+    return flow
+
+
+def build_barrier_stuck_workflow() -> Workflow:
+    """
+    错误示范：只激活 left，merge 却 wait_for_all 等 left AND right。
+
+    start ──► left ──► merge(wait_for_all) ──► end
+              right ─┘   （right 从未被激活）
+
+    Barrier 半满足，merge 永不就绪；超步无活跃节点后直接结束，
+    表现为 COMPLETED 且 result=None（不是一直挂起）。
+    """
+    flow = Workflow(card=WorkflowCard(id="lesson_barrier_stuck", name="屏障卡住"))
+    flow.set_start_comp(
+        "start",
+        EchoStart(),
+        inputs_schema={"text": "${query}"},
+    )
+    flow.add_workflow_comp(
+        "left",
+        TagNode("left"),
+        inputs_schema={"text": "${start.text}"},
+    )
+    flow.add_workflow_comp(
+        "right",
+        TagNode("right"),
+        inputs_schema={"text": "${start.text}"},
+    )
+    flow.add_workflow_comp(
+        "merge",
+        MergeNode(),
+        wait_for_all=True,
+        inputs_schema={
+            "left_text": "${left.text}",
+            "right_text": "${right.text}",
+        },
+    )
+    flow.set_end_comp(
+        "end",
+        EchoEnd(),
+        inputs_schema={"result": "${merge}"},
+    )
+    # 故意只连 start -> left；right 进不了超步，但 merge 仍要求两侧
+    flow.add_connection("start", "left")
+    flow.add_connection("left", "merge")
+    flow.add_connection("right", "merge")
+    flow.add_connection("merge", "end")
+    return flow
+
+
+def build_barrier_or_workflow() -> Workflow:
+    """
+    正确示范：互斥分支用 BranchRouter，框架把 left|right 收成 OR 组。
+
+    start ─条件─► left|right ──► merge(wait_for_all) ──► end
+
+    只走 left 时 merge 也能过（barrier: (left|right) -> merge）。
+    """
+    flow = Workflow(card=WorkflowCard(id="lesson_barrier_or", name="屏障OR组"))
+    flow.set_start_comp(
+        "start",
+        EchoStart(),
+        inputs_schema={"text": "${query}", "path": "${path}"},
+    )
+    flow.add_workflow_comp(
+        "left",
+        TagNode("left"),
+        inputs_schema={"text": "${start.text}"},
+    )
+    flow.add_workflow_comp(
+        "right",
+        TagNode("right"),
+        inputs_schema={"text": "${start.text}"},
+    )
+    flow.add_workflow_comp(
+        "merge",
+        MergeNode(),
+        wait_for_all=True,
+        inputs_schema={
+            "left_text": "${left.text}",
+            "right_text": "${right.text}",
+        },
+    )
+    flow.set_end_comp(
+        "end",
+        EchoEnd(),
+        inputs_schema={"result": "${merge}"},
+    )
+
+    router = BranchRouter()
+    router.add_branch('${start.path} == "left"', "left")
+    router.add_branch('${start.path} == "right"', "right")
+    flow.add_conditional_connection("start", router=router)
+
+    flow.add_connection("left", "merge")
+    flow.add_connection("right", "merge")
+    flow.add_connection("merge", "end")
     return flow

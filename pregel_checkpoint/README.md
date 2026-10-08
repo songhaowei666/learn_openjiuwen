@@ -5,6 +5,7 @@
 1. 并行分支 + `wait_for_all` 汇合
 2. `session.interact` 中断与 `InteractiveInput` 续跑，并打印 `GraphState` 摘要
 3. 异常后节点重入，对比有无业务幂等守卫
+4. 互斥分支误用 AND 汇合 → 假完成；`BranchRouter` OR 组可放行
 
 ## 运行
 
@@ -19,6 +20,7 @@ python -m backend.main parallel
 python -m backend.main interrupt
 python -m backend.main reenter
 python -m backend.main idempotent
+python -m backend.main barrier
 python -m backend.main interrupt --interactive   # 人机课手输回复
 ```
 

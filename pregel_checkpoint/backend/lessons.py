@@ -16,6 +16,8 @@ from openjiuwen.core.workflow import (
 from .components import read_charge_count
 from .setup import summarize_graph_state
 from .workflows import (
+    build_barrier_or_workflow,
+    build_barrier_stuck_workflow,
     build_interrupt_workflow,
     build_parallel_workflow,
     build_side_effect_workflow,
@@ -151,11 +153,54 @@ async def lesson_side_effect(*, idempotent: bool) -> Any:
     return result
 
 
+async def lesson_barrier() -> None:
+    """课 4：wait_for_all 只等到一侧时 merge 不跑；BranchRouter OR 组可放行。"""
+    _banner("课 4：屏障假完成 vs 互斥分支 OR 组")
+    print("对照：只走一条分支，汇合却按 AND 等两侧 → merge 永不触发。")
+    print("本引擎表现不是一直挂起，而是无就绪节点后超步结束，状态 COMPLETED、result=None。")
+
+    # --- 错误：right 从未激活，merge 仍 AND 两侧 ---
+    print()
+    print("--- 4a 错误构图：只激活 left，merge wait_for_all 等 left AND right ---")
+    stuck = build_barrier_stuck_workflow()
+    stuck_session = f"barrier-stuck-{uuid.uuid4().hex[:8]}"
+    stuck_result = await stuck.invoke(
+        {"query": "合同审查"},
+        create_workflow_session(session_id=stuck_session),
+    )
+    print(f"状态: {stuck_result.state}")
+    print(f"结果: {stuck_result.result}")
+    assert stuck_result.state == WorkflowExecutionState.COMPLETED
+    assert stuck_result.result is None, "merge/end 未执行时 end 输出应为 None"
+    print("说明：日志只有 start/left，没有 merge/end；Barrier 半满足，图空转结束。")
+    await _peek_graph(stuck_session, "lesson_barrier_stuck")
+
+    # --- 正确：条件路由注册互斥目标，barrier 收成 (left|right) ---
+    print()
+    print("--- 4b 正确构图：BranchRouter 互斥 left|right + wait_for_all ---")
+    ok_flow = build_barrier_or_workflow()
+    ok_session = f"barrier-or-{uuid.uuid4().hex[:8]}"
+    result = await ok_flow.invoke(
+        {"query": "合同审查", "path": "left"},
+        create_workflow_session(session_id=ok_session),
+    )
+    print(f"状态: {result.state}")
+    print(f"结果: {result.result}")
+    assert result.state == WorkflowExecutionState.COMPLETED
+    payload = result.result
+    assert isinstance(payload, dict) and "result" in payload
+    merged = payload["result"].get("merged")
+    assert merged == "left:合同审查", f"应只汇合 left，实际 {merged!r}"
+    print("说明：只走 left 时 OR 组屏障已满足，merge/end 正常执行。")
+    await _peek_graph(ok_session, "lesson_barrier_or")
+
+
 async def run_all(*, interactive: bool = False) -> None:
-    """按顺序跑完三课。"""
+    """按顺序跑完全部课程。"""
     await lesson_parallel()
     await lesson_interrupt(interactive=interactive)
     await lesson_side_effect(idempotent=False)
     await lesson_side_effect(idempotent=True)
+    await lesson_barrier()
     _banner("全部课程结束")
     print("对照 spec/断点续传与Pregel图模型.md 阅读 channel / pending / 命名空间。")

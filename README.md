@@ -7,7 +7,7 @@
 | `wsdw_multi_workflow` | 一个 Agent 挂多条业务流，中途追问、断点续跑 |
 | `swarmflow_a2ui` | 工作流跑到一半要问人，进度树和表单分两条流 |
 | `swarmchat_room` | 专家协作空间，公开群聊、点名唤醒、真实模型回复 |
-| `pregel_checkpoint` | Pregel 与检查点：并行汇合、人机续跑、异常重入与幂等（CLI，无模型） |
+| `pregel_checkpoint` | Pregel 与检查点：并行汇合、屏障假完成、人机续跑、异常重入与幂等（CLI，无模型） |
 
 Python 虚拟环境、前端依赖和 `.env` 都在本目录，各示例共用。前端依赖由根目录 `npm install` 装进 `node_modules`。
 

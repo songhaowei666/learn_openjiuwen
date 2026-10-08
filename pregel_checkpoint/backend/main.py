@@ -1,5 +1,5 @@
 # -*- coding: UTF-8 -*-
-"""CLI 入口：python -m backend.main [all|parallel|interrupt|reenter|idempotent]"""
+"""CLI 入口：python -m backend.main [all|parallel|interrupt|reenter|idempotent|barrier]"""
 
 from __future__ import annotations
 
@@ -8,6 +8,7 @@ import asyncio
 import sys
 
 from .lessons import (
+    lesson_barrier,
     lesson_interrupt,
     lesson_parallel,
     lesson_side_effect,
@@ -24,7 +25,7 @@ async def _async_main(argv: list[str] | None = None) -> int:
         "lesson",
         nargs="?",
         default="all",
-        choices=["all", "parallel", "interrupt", "reenter", "idempotent"],
+        choices=["all", "parallel", "interrupt", "reenter", "idempotent", "barrier"],
         help="要运行的课程，默认 all",
     )
     parser.add_argument(
@@ -47,6 +48,8 @@ async def _async_main(argv: list[str] | None = None) -> int:
         await lesson_side_effect(idempotent=False)
     elif args.lesson == "idempotent":
         await lesson_side_effect(idempotent=True)
+    elif args.lesson == "barrier":
+        await lesson_barrier()
     return 0
 
 

@@ -13,6 +13,7 @@
 - **课 1**：`start -> left & right -> merge(wait_for_all) -> end`，看并行与汇合。
 - **课 2**：`session.interact` → `INPUT_REQUIRED`；同 `session_id` + `InteractiveInput` 续跑；中断时打印 `GraphState`（含 `pending_nodes`）。
 - **课 3**：charge 先写外部账本再抛错；恢复重入。无守卫 count=2，有守卫 count=1 且 `skipped`。顺便说明：同超步失败时节点内 session 状态可能回滚，外部副作用不会。
+- **课 4**：只激活 left 却 `wait_for_all` 等 left AND right → merge 不跑、`COMPLETED` 且 `result=None`；`BranchRouter` 互斥目标收成 OR 组后可正常汇合。
 
 ### 目录
 
