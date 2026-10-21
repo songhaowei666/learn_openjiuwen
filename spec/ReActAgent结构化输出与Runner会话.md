@@ -1,7 +1,8 @@
 # ReActAgent 结构化输出：FinishRail 收口与 Runner 取 Session
 
 对应 demo：`react_structured_session`。  
-不改现有 demo。接真实模型。CLI 跑通三件事：`ReActAgent` 能调模型；挂上 `StructuredOutputTool` + `StructuredOutputFinishRail` 后权威结果读工具 `captured`，不解析正文；`Runner.run_agent` 凭 `conversation_id` 创建并复用 `AgentSession`。
+原理文：`doc/AgentSession的pre_run与checkpoint-ModelContext是模型的消息视野.md`（含 AgentTeam / Workflow / Node 会话家族）。  
+不改现有其它 demo。接真实模型。CLI 跑通：`ReActAgent` + 结构化输出 rail、Runner 取 session、以及同 session 多 ModelContext（无模型）。
 
 类名以 openjiuwen / agent-core 为准：`ReActAgent`（不是 ReactAgent）。
 
@@ -10,6 +11,7 @@
 - 创建 `ReActAgent`，经 `common.SharedModel` / 仓库根目录 `.env`（`API_BASE`、`API_KEY`、`MODEL_NAME`、`MODEL_PROVIDER`）配模型。system 提示强制：结束前必须调用一次 `structured_output`，不要用自由文本当最终答案。
 - 注册 `StructuredOutputTool(schema)` 与 `await agent.register_rail(StructuredOutputFinishRail())`。模型成功调用工具后，rail 在 `after_tool_call` 里 `request_force_finish`，立刻结束本轮 ReAct；权威结果读该工具实例上的 `captured`。
 - 用 `create_agent_session(session_id=conversation_id, card=agent.card)`（工厂 `create_session_for_agent`）建 session，再 `Runner.run_agent(..., session=session)`。同 `conversation_id` 跑两轮，CLI 打印两侧 `session_id`，验收一致。
+- **多 ModelContext**（`python -m backend.main multi_context`，无模型）：同一 `session_id` 下创建 `main` / `side_task` 两个 context，分别 `add_messages`，验收消息隔离；`save_contexts` 后 `session.state["context"]` 含两个 key。说明 `session_id` 是会话身份，`context_id` 是会话内的消息视野分桶。
 
 ## 使用场景
 
@@ -32,6 +34,12 @@
 
 3. 期望：`captured` 非空，`priority` 为 `high`；CLI 打印 `conversation_id`、本轮 `session_id`、以及 `captured` JSON。
 4. 同一 `conversation_id` 再发一轮（例如「把优先级改成 medium」或任意跟进句），再打印一次 `session_id`，与首轮相同。
+
+多 ModelContext（无模型，见 `backend/multi_context.py`）：
+
+1. 同一 session 上 `create_context(context_id="main")` 与 `create_context(context_id="side_task")`。
+2. main 写入周会对话，side 写入天气对话。
+3. 各自 `get_messages()` 互不包含对方内容；`save_contexts` 后 state 里两个 bucket 均有 messages。
 
 ## 不在本 demo
 
@@ -58,7 +66,9 @@ flowchart TD
 ```text
 react_structured_session/
   backend/agent_factory.py   # ReActAgent + schema 工具 + FinishRail
-  backend/main.py            # CLI：两轮同 conversation_id
+  backend/session_tools.py   # 无参读 session（Tool / @tool）
+  backend/multi_context.py   # 同 session 多 ModelContext（无模型）
+  backend/main.py            # CLI：structured | multi_context | all
   README.md
 ```
 
@@ -153,7 +163,9 @@ async def read_data_context_via_ctx() -> dict:
 ```bash
 source .venv/bin/activate
 cd react_structured_session
-python -m backend.main
+python -m backend.main                 # 默认 all
+python -m backend.main structured
+python -m backend.main multi_context   # 可不接模型
 ```
 
 ## 验收
@@ -162,3 +174,4 @@ python -m backend.main
 2. 成功调用 `structured_output` 后本轮循环结束（FinishRail 生效），不依赖模型自己停。
 3. 两轮使用相同 `conversation_id`，日志中两侧 `session_id` 一致。
 4. 正文不当权威结果：即使模型多说了话，CLI 只展示并断言 `captured`。
+5. `multi_context`：main / side_task 消息隔离，且 `save_contexts` 后 `context` 含两个 key。

@@ -1,14 +1,17 @@
 # coding: utf-8
-"""CLI：两轮同 conversation_id，权威结果读 structured_output.captured。
+"""CLI：结构化输出两轮演示，或同 session 多 ModelContext 演示。
 
-用法（仓库根目录已填 .env）：
+用法（仓库根目录已填 .env；multi_context 可不接模型）：
 
     cd react_structured_session
-    python -m backend.main
+    python -m backend.main                 # 默认 all
+    python -m backend.main structured
+    python -m backend.main multi_context
 """
 
 from __future__ import annotations
 
+import argparse
 import asyncio
 import json
 from typing import Any
@@ -16,6 +19,7 @@ from typing import Any
 from openjiuwen.core.runner import Runner
 
 from .agent_factory import BuiltAgent, create_session_for_agent, create_todo_agent
+from .multi_context import demo_multi_context
 
 CONVERSATION_ID = "react_structured_demo"
 
@@ -103,8 +107,8 @@ async def _run_turn(
     return session_id
 
 
-async def async_main() -> int:
-    """两轮同 conversation_id，断言 session_id 一致且 captured 合格。"""
+async def demo_structured() -> None:
+    """两轮同 conversation_id，断言 session_id 一致且 captured 合格（需真实模型）。"""
     await Runner.start()
     try:
         built = await create_todo_agent()
@@ -129,13 +133,34 @@ async def async_main() -> int:
                 f"两轮 session_id 不一致: {session_id_1!r} vs {session_id_2!r}"
             )
         print(f"验收通过：两轮 session_id 均为 {session_id_1!r}")
-        return 0
     finally:
         await Runner.stop()
 
 
+async def async_main(lesson: str = "all") -> int:
+    """按课运行：structured / multi_context / all。"""
+    if lesson in ("structured", "all"):
+        await demo_structured()
+        if lesson == "all":
+            print()
+    if lesson in ("multi_context", "all"):
+        await demo_multi_context()
+    return 0
+
+
 def main() -> None:
-    raise SystemExit(asyncio.run(async_main()))
+    parser = argparse.ArgumentParser(
+        description="ReActAgent 结构化输出 / 多 ModelContext 学习 demo",
+    )
+    parser.add_argument(
+        "lesson",
+        nargs="?",
+        default="all",
+        choices=["all", "structured", "multi_context"],
+        help="要运行的课程，默认 all",
+    )
+    args = parser.parse_args()
+    raise SystemExit(asyncio.run(async_main(args.lesson)))
 
 
 if __name__ == "__main__":
