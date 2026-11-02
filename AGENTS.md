@@ -6,6 +6,7 @@
 - 每个子目录是一个可运行的demo
 - 每个目录下的doc目录保存需要发布到知乎的技术文章和格式如   openJiuwen | 多工作流 | 一个 Agent 挂多条业务流，中途追问、断点续跑   的标题文档
 - spec目录中是每个demo的spec文档
+- openjiuwen的本地源码位置：/Users/song/Documents/vscode/agent-core
 
 ## 文档链接
 - readme中单独一个章节维护 spec文档和demo项目的链接关系
