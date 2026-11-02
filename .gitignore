@@ -14,3 +14,4 @@ team_data/
 logs/
 __pycache__/
 *.pyc
+.DS_Store
