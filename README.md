@@ -68,6 +68,7 @@ python -m backend.main token
 | --- | --- | --- |
 | `spec/多工作流金融助手-Controller与A2UI.md` | `wsdw_multi_workflow` | `wsdw_multi_workflow/doc/` |
 | `spec/调研报告进度树-SwarmFlow与A2UI.md` | `swarmflow_a2ui` | `swarmflow_a2ui/doc/` |
+| `spec/报告进度树-并行阶段人机闸门与SSE投影.md` | 尚未落地（`workflow_report_tree`） | — |
 | `spec/专家协作空间-SwarmChat群聊.md` | `swarmchat_room` | `swarmchat_room/doc/专家协作空间-用SwarmChat群聊做一间会点名唤醒的公开聊天室.md` |
 | `spec/方案分叉验收-fork与verify.md` | 尚未落地 | — |
 | `spec/ReActAgent结构化输出与Runner会话.md` | `react_structured_session` | `doc/AgentSession的pre_run与checkpoint-ModelContext是模型的消息视野.md` |
