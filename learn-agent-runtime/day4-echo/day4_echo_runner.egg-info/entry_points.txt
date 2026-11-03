@@ -1,2 +1,0 @@
-[console_scripts]
-day4-echo-runner = openjiuwen_runtime.day4_echo.__main__:main
