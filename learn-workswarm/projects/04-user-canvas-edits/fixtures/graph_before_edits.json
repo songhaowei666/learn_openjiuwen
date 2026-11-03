@@ -1,0 +1,45 @@
+{
+  "schema_version": "designer-execution-graph.v1",
+  "graph_id": "graph_learn04edits0001",
+  "project_id": "proj_learn_design",
+  "title": "手改前",
+  "source": "manual",
+  "nodes": [
+    {
+      "id": "n_brief",
+      "type": "text",
+      "label": "Brief: 太空站",
+      "config": { "pipeline": "brief", "prompt": "太空站故事" },
+      "layout": { "x": 0, "y": 0 }
+    },
+    {
+      "id": "n_character_1",
+      "type": "image",
+      "label": "Character 1: Pilot",
+      "config": { "pipeline": "character", "prompt": "飞行员" },
+      "layout": { "x": 320, "y": 0 }
+    },
+    {
+      "id": "n_character_2",
+      "type": "image",
+      "label": "Character 2: Robot",
+      "config": { "pipeline": "character", "prompt": "机器人" },
+      "layout": { "x": 320, "y": 220 }
+    }
+  ],
+  "edges": [
+    {
+      "id": "e_brief_c1",
+      "source": "n_brief",
+      "target": "n_character_1",
+      "kind": "data"
+    },
+    {
+      "id": "e_brief_c2",
+      "source": "n_brief",
+      "target": "n_character_2",
+      "kind": "data"
+    }
+  ],
+  "metadata": {}
+}

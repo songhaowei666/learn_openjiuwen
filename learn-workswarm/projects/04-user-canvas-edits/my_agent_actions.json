@@ -1,0 +1,23 @@
+{
+  "说明": "对照 out_graph_with_edits.json 里的 user_canvas_edits，判断 Agent 动作是否允许。把 FIXME 改成 true 或 false。",
+  "actions": [
+    {
+      "name": "把用户删掉的 n_character_2 再 upsert 回来",
+      "upsert_node_ids": ["n_character_2"],
+      "upsert_edges": [],
+      "allow": "FIXME"
+    },
+    {
+      "name": "把用户断开的 brief↔character_1 再连上",
+      "upsert_node_ids": [],
+      "upsert_edges": [{ "source": "n_brief", "target": "n_character_1" }],
+      "allow": "FIXME"
+    },
+    {
+      "name": "在用户新增的 scene 上继续挂 storyboard",
+      "upsert_node_ids": ["n_storyboard"],
+      "upsert_edges": [{ "source": "n_scene_1", "target": "n_storyboard" }],
+      "allow": "FIXME"
+    }
+  ]
+}

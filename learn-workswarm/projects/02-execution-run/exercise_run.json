@@ -1,0 +1,40 @@
+{
+  "schema_version": "designer-execution-run.v1",
+  "run_id": "run_learn02exercise01",
+  "graph_id": "graph_learn01good0001",
+  "project_id": "proj_learn_design",
+  "status": "FIXME_改成_running_或_completed",
+  "node_states": {
+    "n_brief": {
+      "status": "FIXME_改成_completed",
+      "started_at": 1700000000000,
+      "completed_at": 1700000001000,
+      "version": 1,
+      "output_ref": {
+        "kind": "text",
+        "uri": "FIXME_填一个_uri",
+        "mime_type": "text/markdown"
+      },
+      "text": "宇航员发现废弃空间站"
+    },
+    "n_character_1": {
+      "status": "pending",
+      "started_at": null,
+      "completed_at": null,
+      "version": 1,
+      "blocked_by": ["n_brief"]
+    },
+    "__leader__": {
+      "status": "pending",
+      "activity": {
+        "kind": "stage",
+        "text": "report only",
+        "at": 1700000001000
+      }
+    }
+  },
+  "current_node_ids": [],
+  "metadata": {
+    "trigger_source": "canvas"
+  }
+}

@@ -21,6 +21,9 @@
 
 ## 1. 领域模型（必补，地基）
 
+> 已整理笔记：[`01-domain-model.md`](./01-domain-model.md)  
+> 动手项目：[`projects/`](./projects/)（01 图契约 / 02 运行态 / 03 绑定 / 04 手改）
+
 1. **执行图契约 `designer-execution-graph.v1`**
    - `type`（模态：text/table/image/video/audio）vs `config.pipeline`（brief/character/scene/...）
    - 节点 / 边 / layout / metadata

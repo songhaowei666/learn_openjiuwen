@@ -1,0 +1,20 @@
+{
+  "schema_version": "designer-execution-graph.v1",
+  "graph_id": "graph_learn01bad00001",
+  "project_id": "proj_learn_design",
+  "title": "错误示范：把 pipeline 写进 type",
+  "source": "manual",
+  "nodes": [
+    {
+      "id": "n_character_1",
+      "type": "character",
+      "label": "Astronaut",
+      "config": {
+        "prompt": "宇航服角色"
+      },
+      "layout": { "x": 0, "y": 0 }
+    }
+  ],
+  "edges": [],
+  "metadata": {}
+}

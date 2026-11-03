@@ -1,0 +1,38 @@
+{
+  "schema_version": "designer-execution-graph.v1",
+  "graph_id": "graph_learn01good0001",
+  "project_id": "proj_learn_design",
+  "title": "学习样例：brief → character",
+  "source": "manual",
+  "nodes": [
+    {
+      "id": "n_brief",
+      "type": "text",
+      "label": "Brief: 废弃空间站",
+      "config": {
+        "pipeline": "brief",
+        "prompt": "科幻短片：宇航员发现废弃空间站"
+      },
+      "layout": { "x": 0, "y": 0, "width": 280, "height": 160 }
+    },
+    {
+      "id": "n_character_1",
+      "type": "image",
+      "label": "Character 1: Astronaut",
+      "config": {
+        "pipeline": "character",
+        "prompt": "穿橙色宇航服的女宇航员，半身像"
+      },
+      "layout": { "x": 360, "y": 0, "width": 280, "height": 180 }
+    }
+  ],
+  "edges": [
+    {
+      "id": "e_brief_character_1",
+      "source": "n_brief",
+      "target": "n_character_1",
+      "kind": "data"
+    }
+  ],
+  "metadata": {}
+}

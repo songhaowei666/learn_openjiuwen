@@ -1,0 +1,86 @@
+{
+  "schema_version": "designer-execution-run.v1",
+  "run_id": "run_learn02sample0001",
+  "graph_id": "graph_learn01good0001",
+  "project_id": "proj_learn_design",
+  "status": "running",
+  "node_states": {
+    "n_brief": {
+      "status": "completed",
+      "started_at": 1793719157193,
+      "completed_at": 1793719157194,
+      "output_ref": {
+        "kind": "text",
+        "uri": "file://artifacts/n_brief/brief.md",
+        "mime_type": "text/markdown",
+        "label": "brief"
+      },
+      "version": 1,
+      "activity": {
+        "kind": "stage",
+        "text": "generating brief",
+        "at": 1793719157193
+      },
+      "activity_tail": [
+        "generating brief"
+      ],
+      "activity_log": [
+        {
+          "kind": "stage",
+          "text": "generating brief",
+          "at": 1793719157193
+        }
+      ],
+      "text": "# Brief\n宇航员发现废弃空间站",
+      "history": [
+        {
+          "ts": 1793719157194,
+          "text": "# Brief\n宇航员发现废弃空间站",
+          "output_ref": {
+            "kind": "text",
+            "uri": "file://artifacts/n_brief/brief.md",
+            "mime_type": "text/markdown",
+            "label": "brief"
+          }
+        }
+      ]
+    },
+    "n_character_1": {
+      "status": "pending",
+      "started_at": null,
+      "completed_at": null,
+      "version": 1,
+      "blocked_by": [
+        "n_brief"
+      ]
+    },
+    "__leader__": {
+      "status": "pending",
+      "started_at": null,
+      "completed_at": null,
+      "activity": {
+        "kind": "tool_call",
+        "text": "swarmflow accepted",
+        "tool": "swarmflow",
+        "at": 1793719157193
+      },
+      "activity_tail": [
+        "swarmflow · swarmflow accepted"
+      ],
+      "activity_log": [
+        {
+          "kind": "tool_call",
+          "text": "swarmflow accepted",
+          "tool": "swarmflow",
+          "at": 1793719157193
+        }
+      ]
+    }
+  },
+  "current_node_ids": [],
+  "created_at": 1793719157193,
+  "updated_at": 1793719157194,
+  "metadata": {
+    "trigger_source": "canvas"
+  }
+}

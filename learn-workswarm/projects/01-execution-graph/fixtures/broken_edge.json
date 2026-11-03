@@ -1,0 +1,25 @@
+{
+  "schema_version": "designer-execution-graph.v1",
+  "graph_id": "graph_learn01bad00002",
+  "project_id": "proj_learn_design",
+  "title": "错误示范：边指向不存在的节点",
+  "source": "manual",
+  "nodes": [
+    {
+      "id": "n_brief",
+      "type": "text",
+      "label": "Text",
+      "config": { "pipeline": "brief", "prompt": "hello" },
+      "layout": { "x": 0, "y": 0 }
+    }
+  ],
+  "edges": [
+    {
+      "id": "e_orphan",
+      "source": "n_brief",
+      "target": "n_missing",
+      "kind": "data"
+    }
+  ],
+  "metadata": {}
+}

@@ -1,0 +1,105 @@
+{
+  "schema_version": "designer-execution-graph.v1",
+  "graph_id": "graph_learn04edits0001",
+  "project_id": "proj_learn_design",
+  "title": "手改前",
+  "source": "manual",
+  "nodes": [
+    {
+      "id": "n_brief",
+      "type": "text",
+      "label": "Brief: 太空站",
+      "config": {
+        "pipeline": "brief",
+        "prompt": "太空站故事"
+      },
+      "layout": {
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "id": "n_character_1",
+      "type": "image",
+      "label": "Character 1: Pilot",
+      "config": {
+        "pipeline": "character",
+        "prompt": "飞行员"
+      },
+      "layout": {
+        "x": 320,
+        "y": 0
+      }
+    },
+    {
+      "id": "n_scene_1",
+      "type": "image",
+      "label": "Scene 1: Hangar",
+      "config": {
+        "pipeline": "scene",
+        "prompt": "机库"
+      },
+      "layout": {
+        "x": 640,
+        "y": 0
+      }
+    }
+  ],
+  "edges": [],
+  "metadata": {
+    "user_topology_edit": true,
+    "user_canvas_edits": [
+      {
+        "op": "remove",
+        "node_id": "n_character_2",
+        "at": 1793719157271,
+        "label": "Character 2: Robot",
+        "role": "image",
+        "type": "image"
+      },
+      {
+        "op": "disconnect",
+        "node_id": "n_brief",
+        "at": 1793719157271,
+        "peer_id": "n_character_1"
+      },
+      {
+        "op": "add",
+        "node_id": "n_scene_1",
+        "at": 1793719157271,
+        "label": "Scene 1: Hangar",
+        "role": "image",
+        "type": "image"
+      }
+    ],
+    "director_canvas_awareness": {
+      "added": [
+        {
+          "node_id": "n_scene_1",
+          "label": "Scene 1: Hangar",
+          "role": "image",
+          "type": "image"
+        }
+      ],
+      "removed": [
+        {
+          "node_id": "n_character_2",
+          "label": "Character 2: Robot",
+          "role": "image",
+          "type": "image"
+        }
+      ],
+      "connected": [],
+      "disconnected": [
+        {
+          "node_id": "n_brief",
+          "label": "",
+          "role": "",
+          "type": "",
+          "peer_id": "n_character_1"
+        }
+      ],
+      "replaced": []
+    }
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "schema_version": "designer-execution-graph.v1",
+  "graph_id": "graph_learn01mine0001",
+  "project_id": "proj_learn_design",
+  "title": "TODO：自己补全一张合法图",
+  "source": "manual",
+  "nodes": [
+    {
+      "id": "n_brief",
+      "type": "FIXME_填模态",
+      "label": "Brief: 我的故事",
+      "config": {
+        "pipeline": "brief",
+        "prompt": "写一句创意"
+      },
+      "layout": { "x": 0, "y": 0, "width": 280, "height": 160 }
+    },
+    {
+      "id": "n_scene_1",
+      "type": "FIXME_填模态",
+      "label": "Scene 1: 地点",
+      "config": {
+        "pipeline": "FIXME_填配方",
+        "prompt": "描述场景"
+      },
+      "layout": { "x": 360, "y": 0, "width": 280, "height": 180 }
+    }
+  ],
+  "edges": [
+    {
+      "id": "e_brief_scene_1",
+      "source": "n_brief",
+      "target": "n_scene_1",
+      "kind": "data"
+    }
+  ],
+  "metadata": {}
+}
